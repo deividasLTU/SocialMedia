@@ -1,0 +1,148 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  googleID  String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  username     String
+  email        String    @unique
+  hash         String    @default("")
+  gender       String
+  profileImage String
+  posts        Post[]
+  comments     Comment[]
+  resetPassToken String @default("")
+  role Int @default(0)
+
+  sentMessages     Message[]  @relation("SentMessages")
+  receivedMessages Message[]  @relation("ReceivedMessages")
+  reactions         Reaction[]
+  followedBy       Follow[]   @relation("FollowedBy")
+  following        Follow[]   @relation("Following")
+  blockedByMe      Block[]    @relation("Blocker")
+  blockedMe        Block[]    @relation("Blocked")
+  reports           Report[]
+
+  @@map("users")
+}
+
+model Block {
+  blockerId Int
+  blocker   User @relation("Blocker", fields: [blockerId], references: [id])
+
+  blockedId Int
+  blocked   User @relation("Blocked", fields: [blockedId], references: [id])
+
+  @@id([blockerId, blockedId])
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  text      String
+  theme     String
+  WasEdited Boolean
+  likes     Int     @default(0)
+
+  userId   Int
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quotedPostId Int?  
+  quotedPost   Post?  @relation("QuotedPost", fields: [quotedPostId], references: [id])
+
+  quotedBy     Post[] @relation("QuotedPost")
+
+  comments Comment[]
+  reactions Reaction[]
+  reports   Report[]
+
+  @@map("posts")
+}
+
+model Message {
+  id Int @id @default(autoincrement())
+
+  senderId Int
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  receiverId Int
+  receiver   User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  messageContent String
+  messageImage String?
+  isLiked Boolean @default(false)
+  likedUserId Int @default(-1)
+  sentAt         DateTime @default(now())
+  readStatus     Boolean  @default(false)
+
+  @@map("messages")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  text      String
+  likes     Int     @default(0)
+
+  userId   Int
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId   Int
+  post     Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
+
+  @@map("comments")
+}
+
+model Reaction {
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId Int?
+  post   Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  commentId Int?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@map("reactions")
+}
+
+model Follow {
+  id           Int  @id @default(autoincrement())
+  followedById Int
+  followedBy   User @relation("Following", fields: [followedById], references: [id], onDelete: Cascade)
+  followingId  Int
+  following    User @relation("FollowedBy", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@map("follows")
+}
+
+model Report {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  text      String
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId Int
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
+}

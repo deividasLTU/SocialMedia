@@ -1,0 +1,32 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route} from 'react-router-dom';
+import HomePage from "./pages/Home";
+import SettingsPage from "./pages/Settings";
+import MessagesPage from './pages/Messages';
+import Nav from "./components/Nav";
+import LoginPage from "./pages/Login";
+import { useLocation } from 'react-router-dom'
+
+const UseNav=()=>{
+  let location = useLocation();
+  if(location.pathname !=="/login"){
+    return(<Nav/>);
+  }
+  return(<></>);
+};
+
+function App() {
+  return (
+    <BrowserRouter>
+        <UseNav />
+      <Routes>
+        <Route path={'/'} element={<HomePage/>} />
+        <Route path={'/messages'} element={<MessagesPage/>} />
+        <Route path={'/settings'} element={<SettingsPage/>} />
+        <Route path={'/login'} element={<LoginPage/>}/>
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
